@@ -1,0 +1,82 @@
+name: omr_scanner
+description: "Mobile app for scanning exam sheets and automatically calculating scores using OMR (Optical Mark Recognition)."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # UI & Navigation
+  cupertino_icons: ^1.0.2
+  provider: ^6.0.0
+  get_it: ^7.6.0
+
+  # HTTP & API
+  dio: ^5.3.1
+
+  # Image & Camera
+  image_picker: ^1.0.4
+  camera: ^0.10.4
+  image: ^4.1.1
+  permission_handler: ^12.0.1
+
+  # Local Storage
+  shared_preferences: ^2.2.2
+  hive: ^2.2.3
+
+  # Firebase
+  firebase_core: ^2.24.0
+  firebase_auth: ^4.10.0
+  firebase_storage: ^11.5.0
+
+  # State Management & Async
+  riverpod: ^2.4.0
+  flutter_riverpod: ^2.4.0
+
+  # UI Components
+  flutter_svg: ^2.0.7
+  intl: ^0.19.0
+  lottie: ^2.7.0
+
+  # Data Handling
+  freezed_annotation: ^2.4.1
+  json_annotation: ^4.9.0
+
+  # Utilities
+  logging: ^1.2.0
+  stack_trace: ^1.11.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^2.0.0
+  build_runner: ^2.4.6
+  json_serializable: ^6.7.0
+  freezed: ^2.4.5
+  hive_generator: ^2.0.1
+
+flutter:
+  uses-material-design: true
+
+  # Assets - uncomment and create directories as needed
+  # assets:
+  #   - assets/images/
+  #   - assets/icons/
+  #   - assets/animations/
+  #   - assets/sample_data/
+
+  # Fonts - uncomment when fonts are added
+  # fonts:
+  #   - family: Roboto
+  #     fonts:
+  #       - asset: assets/fonts/Roboto-Regular.ttf
+  #       - asset: assets/fonts/Roboto-Bold.ttf
+  #         weight: 700
+  #       - asset: assets/fonts/Roboto-Medium.ttf
+  #         weight: 500
