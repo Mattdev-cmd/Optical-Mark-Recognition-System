@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'create_exam_screen.dart';
+import 'classroom_list_screen.dart';
 import '../providers/index.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -161,6 +162,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 8),
                         const Text(
                           'Set up a new exam',
+                          style: TextStyle(color: Colors.grey),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Class Records Card
+              Card(
+                elevation: 4,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const ClassroomListScreen(),
+                      ),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.school,
+                          size: 48,
+                          color: Colors.purple.shade600,
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Class Records',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Manage classrooms and student records',
                           style: TextStyle(color: Colors.grey),
                           textAlign: TextAlign.center,
                         ),

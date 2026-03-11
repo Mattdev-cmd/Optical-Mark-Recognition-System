@@ -15,7 +15,7 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
   late TextEditingController _subjectController;
   late TextEditingController _questionsController;
   
-  List<TextEditingController> _answerControllers = [];
+  final List<TextEditingController> _answerControllers = [];
   int _totalQuestions = 20;
   bool _isLoading = false;
   String? _error;
@@ -78,7 +78,7 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
         name: _nameController.text,
         subject: _subjectController.text,
         totalQuestions: _totalQuestions,
-        choices: ['A', 'B', 'C', 'D', 'E'],
+        choices: ['A', 'B', 'C', 'D'],
         answerKey: answerKey,
       );
 
@@ -168,7 +168,7 @@ class _CreateExamScreenState extends State<CreateExamScreen> {
               ),
               const SizedBox(height: 24),
               const Text(
-                'Answer Key (A-E)',
+                'Answer Key (A-D)',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,

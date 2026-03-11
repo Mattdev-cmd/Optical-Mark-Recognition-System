@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:dio/dio.dart';
 import 'dart:io';
 import '../models/index.dart';
 import '../services/api_client.dart';
@@ -59,7 +60,16 @@ class ScanProvider extends ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
-      _error = e.toString();
+      if (e is DioException && e.response?.data != null) {
+        final data = e.response!.data;
+        if (data is Map && data.containsKey('detail')) {
+          _error = data['detail'].toString();
+        } else {
+          _error = e.toString();
+        }
+      } else {
+        _error = e.toString();
+      }
       _lastResult = null;
       _isProcessing = false;
       notifyListeners();

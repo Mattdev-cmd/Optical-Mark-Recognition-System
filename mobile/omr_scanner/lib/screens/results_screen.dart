@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/index.dart';
+import '../models/index.dart';
 
 class ResultsScreen extends StatefulWidget {
   const ResultsScreen({Key? key}) : super(key: key);
@@ -135,7 +136,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
               Consumer<ExamProvider>(
                 builder: (context, examProvider, _) {
                   return DropdownButtonFormField(
-                    value: _selectedExamId,
+                    initialValue: _selectedExamId,
                     items: [
                       const DropdownMenuItem(
                         value: null,
@@ -207,23 +208,21 @@ class _ResultsScreenState extends State<ResultsScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: resultsProvider.results.length,
                     itemBuilder: (context, index) {
-                      final result = resultsProvider.results[index] as Map<String, dynamic>;
-                      final correctAnswers = (result['correct_answers'] as num?)?.toInt() ?? 0;
-                      final totalQuestions = (result['total_questions'] as num?)?.toInt() ?? 0;
-                      final percentage = totalQuestions > 0
-                          ? ((correctAnswers / totalQuestions) * 100).toStringAsFixed(1)
+                      final resultSummary = resultsProvider.results[index] as ResultSummary;
+                      final percentage = resultSummary.totalQuestions > 0
+                          ? ((resultSummary.correctAnswers / resultSummary.totalQuestions) * 100).toStringAsFixed(1)
                           : '0';
 
                       return Card(
                         margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
-                          title: Text(result['student_name'] as String? ?? 'Unknown'),
+                          title: Text(resultSummary.studentName),
                           subtitle: Text(
-                            'Score: $correctAnswers/$totalQuestions ($percentage%)',
+                            'Score: ${resultSummary.correctAnswers}/${resultSummary.totalQuestions} ($percentage%)',
                           ),
                           trailing: const Icon(Icons.arrow_forward),
                           onTap: () {
-                            _showResultDetails(context, result);
+                            _showResultDetails(context, resultSummary.resultId);
                           },
                         ),
                       );
@@ -238,67 +237,235 @@ class _ResultsScreenState extends State<ResultsScreen> {
     );
   }
 
-  void _showResultDetails(BuildContext context, dynamic result) {
-    final resultMap = result as Map<String, dynamic>;
-    final correctAnswers = (resultMap['correct_answers'] as num?)?.toInt() ?? 0;
-    final totalQuestions = (resultMap['total_questions'] as num?)?.toInt() ?? 0;
-    final studentAnswers = resultMap['student_answers'] as List<dynamic>? ?? [];
-
+  void _showResultDetails(BuildContext context, String resultId) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(resultMap['student_name'] as String? ?? 'Unknown'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ListTile(
-                title: const Text('Score'),
-                trailing: Text(
-                  '$correctAnswers/$totalQuestions',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+      builder: (context) => FutureBuilder<ScanResult>(
+        future: context.read<ScanProvider>().apiClient.getResultDetails(resultId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const AlertDialog(
+              title: Text('Loading...'),
+              content: SizedBox(
+                height: 50,
+                child: Center(child: CircularProgressIndicator()),
+              ),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return AlertDialog(
+              title: const Text('Error'),
+              content: Text('Failed to load result: ${snapshot.error}'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close'),
                 ),
-              ),
-              ListTile(
-                title: const Text('Percentage'),
-                trailing: Text(
-                  '${totalQuestions > 0 ? ((correctAnswers / totalQuestions) * 100).toStringAsFixed(1) : '0'}%',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
+              ],
+            );
+          }
+
+          if (!snapshot.hasData) {
+            return AlertDialog(
+              title: const Text('Error'),
+              content: const Text('No result data found'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Close'),
                 ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Questions Answered:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              if (studentAnswers.isNotEmpty)
-                ...studentAnswers.asMap().entries.map((entry) {
-                  final idx = entry.key + 1;
-                  final answer = entry.value as Map<String, dynamic>?;
-                  final isCorrect = answer?['is_correct'] as bool? ?? false;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4.0),
-                    child: Text(
-                      'Q$idx: ${answer?['student_answer'] ?? 'No Answer'}',
-                      style: TextStyle(
-                        color: isCorrect ? Colors.green : Colors.red,
+              ],
+            );
+          }
+
+          final result = snapshot.data!;
+          final correctAnswers = result.correctAnswers;
+          final totalQuestions = result.totalQuestions;
+          final studentAnswers = result.studentAnswers;
+          final percentage = result.scorePercentage.toStringAsFixed(1);
+
+          return AlertDialog(
+            title: Text(result.studentName),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ListTile(
+                      title: const Text('Score'),
+                      trailing: Text(
+                        '$correctAnswers/$totalQuestions',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ),
-                  );
-                })
-              else
-                const Text('No detailed answers available'),
+                    ListTile(
+                      title: const Text('Percentage'),
+                      trailing: Text(
+                        '${totalQuestions > 0 ? ((correctAnswers / totalQuestions) * 100).toStringAsFixed(1) : '0'}%',
+                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Detailed Answer Breakdown:',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    const SizedBox(height: 8),
+                    if (studentAnswers.isNotEmpty)
+                      Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          children: studentAnswers.asMap().entries.map((entry) {
+                            final idx = entry.key;
+                            final answer = entry.value;
+                            final isCorrect = answer.isCorrect;
+
+                            return Column(
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(12.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        flex: 1,
+                                        child: Text(
+                                          'Q${answer.questionNumber}',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Detected:',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Container(
+                                              margin: const EdgeInsets.only(top: 4),
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 4,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: isCorrect
+                                                    ? Colors.green.shade50
+                                                    : Colors.red.shade50,
+                                                border: Border.all(
+                                                  color: isCorrect
+                                                      ? Colors.green
+                                                      : Colors.red,
+                                                ),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                answer.studentAnswer ?? '-',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: isCorrect
+                                                      ? Colors.green.shade700
+                                                      : Colors.red.shade700,
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            const Text(
+                                              'Correct:',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Container(
+                                              margin: const EdgeInsets.only(top: 4),
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 4,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue.shade50,
+                                                border: Border.all(
+                                                  color: Colors.blue,
+                                                ),
+                                                borderRadius: BorderRadius.circular(4),
+                                              ),
+                                              child: Text(
+                                                answer.correctAnswer,
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Colors.blue.shade700,
+                                                  fontSize: 16,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Container(
+                                        padding: const EdgeInsets.all(6),
+                                        decoration: BoxDecoration(
+                                          color: isCorrect
+                                              ? Colors.green.shade100
+                                              : Colors.red.shade100,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          isCorrect ? Icons.check : Icons.close,
+                                          color: isCorrect ? Colors.green : Colors.red,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (idx < studentAnswers.length - 1)
+                                  Divider(
+                                    height: 1,
+                                    color: Colors.grey.shade300,
+                                  ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+                      )
+                    else
+                      const Text('No detailed answers available'),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Close'),
+              ),
             ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
-          ),
-        ],
+          );
+        },
       ),
     );
   }

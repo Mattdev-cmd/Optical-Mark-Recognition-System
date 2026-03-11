@@ -24,10 +24,9 @@ class ScanResult with _$ScanResult {
     @JsonKey(name: 'exam_name') required String examName,
     @JsonKey(name: 'total_questions') required int totalQuestions,
     @JsonKey(name: 'correct_answers') required int correctAnswers,
-    required String score,
-    required String percentage,
+    @JsonKey(name: 'score_percentage') required double scorePercentage,
     @JsonKey(name: 'student_answers') required List<StudentAnswer> studentAnswers,
-    required Map<String, dynamic> metadata,
+    Map<String, dynamic>? metadata,
   }) = _ScanResult;
 
   factory ScanResult.fromJson(Map<String, dynamic> json) =>

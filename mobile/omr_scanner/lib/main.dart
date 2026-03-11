@@ -28,6 +28,7 @@ class OMRScannerApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ExamProvider(_apiClient)),
         ChangeNotifierProvider(create: (_) => ScanProvider(_apiClient)),
         ChangeNotifierProvider(create: (_) => ResultsProvider(_apiClient)),
+        ChangeNotifierProvider(create: (_) => ClassroomProvider(_apiClient)),
       ],
       child: MaterialApp(
         title: 'OMR Scanner',
@@ -43,6 +44,7 @@ class OMRScannerApp extends StatelessWidget {
           '/dashboard': (context) => const DashboardScreen(),
           '/scan': (context) => const ScanScreen(),
           '/results': (context) => const ResultsScreen(),
+          '/classrooms': (context) => const ClassroomListScreen(),
         },
       ),
     );

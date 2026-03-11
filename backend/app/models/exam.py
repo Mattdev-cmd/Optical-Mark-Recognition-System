@@ -10,7 +10,7 @@ class ExamCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     subject: str = Field(..., min_length=1, max_length=100)
     total_questions: int = Field(..., gt=0, le=200)
-    choices: List[str] = Field(default=["A", "B", "C", "D", "E"])
+    choices: List[str] = Field(default=["A", "B", "C", "D"])
     answer_key: List[AnswerKey]
 
 class ExamUpdate(BaseModel):

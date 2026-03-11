@@ -248,11 +248,11 @@ mixin _$ScanResult {
   int get totalQuestions => throw _privateConstructorUsedError;
   @JsonKey(name: 'correct_answers')
   int get correctAnswers => throw _privateConstructorUsedError;
-  String get score => throw _privateConstructorUsedError;
-  String get percentage => throw _privateConstructorUsedError;
+  @JsonKey(name: 'score_percentage')
+  double get scorePercentage => throw _privateConstructorUsedError;
   @JsonKey(name: 'student_answers')
   List<StudentAnswer> get studentAnswers => throw _privateConstructorUsedError;
-  Map<String, dynamic> get metadata => throw _privateConstructorUsedError;
+  Map<String, dynamic>? get metadata => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -272,10 +272,9 @@ abstract class $ScanResultCopyWith<$Res> {
       @JsonKey(name: 'exam_name') String examName,
       @JsonKey(name: 'total_questions') int totalQuestions,
       @JsonKey(name: 'correct_answers') int correctAnswers,
-      String score,
-      String percentage,
+      @JsonKey(name: 'score_percentage') double scorePercentage,
       @JsonKey(name: 'student_answers') List<StudentAnswer> studentAnswers,
-      Map<String, dynamic> metadata});
+      Map<String, dynamic>? metadata});
 }
 
 /// @nodoc
@@ -296,10 +295,9 @@ class _$ScanResultCopyWithImpl<$Res, $Val extends ScanResult>
     Object? examName = null,
     Object? totalQuestions = null,
     Object? correctAnswers = null,
-    Object? score = null,
-    Object? percentage = null,
+    Object? scorePercentage = null,
     Object? studentAnswers = null,
-    Object? metadata = null,
+    Object? metadata = freezed,
   }) {
     return _then(_value.copyWith(
       resultId: null == resultId
@@ -322,22 +320,18 @@ class _$ScanResultCopyWithImpl<$Res, $Val extends ScanResult>
           ? _value.correctAnswers
           : correctAnswers // ignore: cast_nullable_to_non_nullable
               as int,
-      score: null == score
-          ? _value.score
-          : score // ignore: cast_nullable_to_non_nullable
-              as String,
-      percentage: null == percentage
-          ? _value.percentage
-          : percentage // ignore: cast_nullable_to_non_nullable
-              as String,
+      scorePercentage: null == scorePercentage
+          ? _value.scorePercentage
+          : scorePercentage // ignore: cast_nullable_to_non_nullable
+              as double,
       studentAnswers: null == studentAnswers
           ? _value.studentAnswers
           : studentAnswers // ignore: cast_nullable_to_non_nullable
               as List<StudentAnswer>,
-      metadata: null == metadata
+      metadata: freezed == metadata
           ? _value.metadata
           : metadata // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>,
+              as Map<String, dynamic>?,
     ) as $Val);
   }
 }
@@ -356,10 +350,9 @@ abstract class _$$ScanResultImplCopyWith<$Res>
       @JsonKey(name: 'exam_name') String examName,
       @JsonKey(name: 'total_questions') int totalQuestions,
       @JsonKey(name: 'correct_answers') int correctAnswers,
-      String score,
-      String percentage,
+      @JsonKey(name: 'score_percentage') double scorePercentage,
       @JsonKey(name: 'student_answers') List<StudentAnswer> studentAnswers,
-      Map<String, dynamic> metadata});
+      Map<String, dynamic>? metadata});
 }
 
 /// @nodoc
@@ -378,10 +371,9 @@ class __$$ScanResultImplCopyWithImpl<$Res>
     Object? examName = null,
     Object? totalQuestions = null,
     Object? correctAnswers = null,
-    Object? score = null,
-    Object? percentage = null,
+    Object? scorePercentage = null,
     Object? studentAnswers = null,
-    Object? metadata = null,
+    Object? metadata = freezed,
   }) {
     return _then(_$ScanResultImpl(
       resultId: null == resultId
@@ -404,22 +396,18 @@ class __$$ScanResultImplCopyWithImpl<$Res>
           ? _value.correctAnswers
           : correctAnswers // ignore: cast_nullable_to_non_nullable
               as int,
-      score: null == score
-          ? _value.score
-          : score // ignore: cast_nullable_to_non_nullable
-              as String,
-      percentage: null == percentage
-          ? _value.percentage
-          : percentage // ignore: cast_nullable_to_non_nullable
-              as String,
+      scorePercentage: null == scorePercentage
+          ? _value.scorePercentage
+          : scorePercentage // ignore: cast_nullable_to_non_nullable
+              as double,
       studentAnswers: null == studentAnswers
           ? _value._studentAnswers
           : studentAnswers // ignore: cast_nullable_to_non_nullable
               as List<StudentAnswer>,
-      metadata: null == metadata
+      metadata: freezed == metadata
           ? _value._metadata
           : metadata // ignore: cast_nullable_to_non_nullable
-              as Map<String, dynamic>,
+              as Map<String, dynamic>?,
     ));
   }
 }
@@ -433,11 +421,10 @@ class _$ScanResultImpl implements _ScanResult {
       @JsonKey(name: 'exam_name') required this.examName,
       @JsonKey(name: 'total_questions') required this.totalQuestions,
       @JsonKey(name: 'correct_answers') required this.correctAnswers,
-      required this.score,
-      required this.percentage,
+      @JsonKey(name: 'score_percentage') required this.scorePercentage,
       @JsonKey(name: 'student_answers')
       required final List<StudentAnswer> studentAnswers,
-      required final Map<String, dynamic> metadata})
+      final Map<String, dynamic>? metadata})
       : _studentAnswers = studentAnswers,
         _metadata = metadata;
 
@@ -460,9 +447,8 @@ class _$ScanResultImpl implements _ScanResult {
   @JsonKey(name: 'correct_answers')
   final int correctAnswers;
   @override
-  final String score;
-  @override
-  final String percentage;
+  @JsonKey(name: 'score_percentage')
+  final double scorePercentage;
   final List<StudentAnswer> _studentAnswers;
   @override
   @JsonKey(name: 'student_answers')
@@ -472,17 +458,19 @@ class _$ScanResultImpl implements _ScanResult {
     return EqualUnmodifiableListView(_studentAnswers);
   }
 
-  final Map<String, dynamic> _metadata;
+  final Map<String, dynamic>? _metadata;
   @override
-  Map<String, dynamic> get metadata {
+  Map<String, dynamic>? get metadata {
+    final value = _metadata;
+    if (value == null) return null;
     if (_metadata is EqualUnmodifiableMapView) return _metadata;
     // ignore: implicit_dynamic_type
-    return EqualUnmodifiableMapView(_metadata);
+    return EqualUnmodifiableMapView(value);
   }
 
   @override
   String toString() {
-    return 'ScanResult(resultId: $resultId, studentName: $studentName, examName: $examName, totalQuestions: $totalQuestions, correctAnswers: $correctAnswers, score: $score, percentage: $percentage, studentAnswers: $studentAnswers, metadata: $metadata)';
+    return 'ScanResult(resultId: $resultId, studentName: $studentName, examName: $examName, totalQuestions: $totalQuestions, correctAnswers: $correctAnswers, scorePercentage: $scorePercentage, studentAnswers: $studentAnswers, metadata: $metadata)';
   }
 
   @override
@@ -500,9 +488,8 @@ class _$ScanResultImpl implements _ScanResult {
                 other.totalQuestions == totalQuestions) &&
             (identical(other.correctAnswers, correctAnswers) ||
                 other.correctAnswers == correctAnswers) &&
-            (identical(other.score, score) || other.score == score) &&
-            (identical(other.percentage, percentage) ||
-                other.percentage == percentage) &&
+            (identical(other.scorePercentage, scorePercentage) ||
+                other.scorePercentage == scorePercentage) &&
             const DeepCollectionEquality()
                 .equals(other._studentAnswers, _studentAnswers) &&
             const DeepCollectionEquality().equals(other._metadata, _metadata));
@@ -517,8 +504,7 @@ class _$ScanResultImpl implements _ScanResult {
       examName,
       totalQuestions,
       correctAnswers,
-      score,
-      percentage,
+      scorePercentage,
       const DeepCollectionEquality().hash(_studentAnswers),
       const DeepCollectionEquality().hash(_metadata));
 
@@ -543,11 +529,10 @@ abstract class _ScanResult implements ScanResult {
       @JsonKey(name: 'exam_name') required final String examName,
       @JsonKey(name: 'total_questions') required final int totalQuestions,
       @JsonKey(name: 'correct_answers') required final int correctAnswers,
-      required final String score,
-      required final String percentage,
+      @JsonKey(name: 'score_percentage') required final double scorePercentage,
       @JsonKey(name: 'student_answers')
       required final List<StudentAnswer> studentAnswers,
-      required final Map<String, dynamic> metadata}) = _$ScanResultImpl;
+      final Map<String, dynamic>? metadata}) = _$ScanResultImpl;
 
   factory _ScanResult.fromJson(Map<String, dynamic> json) =
       _$ScanResultImpl.fromJson;
@@ -568,14 +553,13 @@ abstract class _ScanResult implements ScanResult {
   @JsonKey(name: 'correct_answers')
   int get correctAnswers;
   @override
-  String get score;
-  @override
-  String get percentage;
+  @JsonKey(name: 'score_percentage')
+  double get scorePercentage;
   @override
   @JsonKey(name: 'student_answers')
   List<StudentAnswer> get studentAnswers;
   @override
-  Map<String, dynamic> get metadata;
+  Map<String, dynamic>? get metadata;
   @override
   @JsonKey(ignore: true)
   _$$ScanResultImplCopyWith<_$ScanResultImpl> get copyWith =>

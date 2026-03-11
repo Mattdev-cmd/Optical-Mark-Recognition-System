@@ -160,3 +160,79 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
         id=str(user["_id"]),
         **user
     )
+
+
+@router.get("/users/search")
+async def search_users(
+    q: str = "",
+    role: str = "student",
+    current_user: dict = Depends(get_current_user)
+):
+    """Search users by name or email, optionally filtered by role"""
+    db = get_db()
+    import re
+    query = {"is_active": {"$ne": False}}
+
+    if role:
+        query["role"] = role
+
+    if q:
+        safe_q = re.escape(q)
+        query["$or"] = [
+            {"name": {"$regex": safe_q, "$options": "i"}},
+            {"email": {"$regex": safe_q, "$options": "i"}},
+        ]
+
+    users = list(db.users.find(query).limit(50))
+
+    return [
+        {
+            "id": str(u["_id"]),
+            "name": u["name"],
+            "email": u["email"],
+            "role": u.get("role", "student"),
+        }
+        for u in users
+    ]
+
+
+@router.post("/users/create-student")
+async def create_student(
+    data: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Create a student account (teachers/admins only). Returns the created user."""
+    db = get_db()
+
+    user_role = current_user.get("role", "user")
+    if user_role not in ("teacher", "admin"):
+        raise HTTPException(status_code=403, detail="Only teachers can create students")
+
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip().lower()
+
+    if not name or not email:
+        raise HTTPException(status_code=400, detail="Name and email are required")
+
+    existing = db.users.find_one({"email": email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    user_doc = {
+        "name": name,
+        "email": email,
+        "role": "student",
+        "password_hash": AuthUtils.hash_password("student123"),
+        "is_active": True,
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow(),
+    }
+
+    result = db.users.insert_one(user_doc)
+
+    return {
+        "id": str(result.inserted_id),
+        "name": name,
+        "email": email,
+        "role": "student",
+    }

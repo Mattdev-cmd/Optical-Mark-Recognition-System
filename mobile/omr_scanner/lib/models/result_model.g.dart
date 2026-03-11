@@ -29,12 +29,11 @@ _$ScanResultImpl _$$ScanResultImplFromJson(Map<String, dynamic> json) =>
       examName: json['exam_name'] as String,
       totalQuestions: (json['total_questions'] as num).toInt(),
       correctAnswers: (json['correct_answers'] as num).toInt(),
-      score: json['score'] as String,
-      percentage: json['percentage'] as String,
+      scorePercentage: (json['score_percentage'] as num).toDouble(),
       studentAnswers: (json['student_answers'] as List<dynamic>)
           .map((e) => StudentAnswer.fromJson(e as Map<String, dynamic>))
           .toList(),
-      metadata: json['metadata'] as Map<String, dynamic>,
+      metadata: json['metadata'] as Map<String, dynamic>?,
     );
 
 Map<String, dynamic> _$$ScanResultImplToJson(_$ScanResultImpl instance) =>
@@ -44,8 +43,7 @@ Map<String, dynamic> _$$ScanResultImplToJson(_$ScanResultImpl instance) =>
       'exam_name': instance.examName,
       'total_questions': instance.totalQuestions,
       'correct_answers': instance.correctAnswers,
-      'score': instance.score,
-      'percentage': instance.percentage,
+      'score_percentage': instance.scorePercentage,
       'student_answers': instance.studentAnswers,
       'metadata': instance.metadata,
     };

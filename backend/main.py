@@ -3,8 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.config import settings
 from app.database import connect_db, close_db
-from app.routes import auth, exams
-# from app.routes import scanning  # Temporarily disabled due to OpenCV dependency
+from app.routes import auth, exams, scanning, classrooms
 
 # Lifespan context manager
 @asynccontextmanager
@@ -36,7 +35,8 @@ app.add_middleware(
 # Include routers
 app.include_router(auth.router)
 app.include_router(exams.router)
-# app.include_router(scanning.router)  # Temporarily disabled due to OpenCV dependency
+app.include_router(scanning.router)
+app.include_router(classrooms.router)
 
 @app.get("/", tags=["Health"])
 async def root():

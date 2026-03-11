@@ -38,6 +38,7 @@ async def process_answer_sheet(
     try:
         # Read image file
         image_data = await sheet_image.read()
+        print(f"[SCAN] Processing image: {len(image_data)} bytes, exam: {exam['name']}, questions: {exam['total_questions']}, choices: {exam['choices']}")
         
         # Process OMR
         detected_answers, metadata = processor.process_answer_sheet(
@@ -46,10 +47,17 @@ async def process_answer_sheet(
             choices=exam["choices"]
         )
         
+        print(f"[SCAN] Detection result: answers={detected_answers}, metadata={metadata}")
+        
         if detected_answers is None:
+            error_msg = metadata.get("error", "Unknown error")
+            traceback_info = metadata.get("traceback", "")
+            print(f"[SCAN ERROR] OMR processing failed: {error_msg}")
+            if traceback_info:
+                print(f"[SCAN TRACEBACK] {traceback_info}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to process answer sheet: " + metadata.get("error", "Unknown error")
+                detail=f"Failed to process answer sheet: {error_msg}"
             )
         
         # Compare with answer key and calculate score
@@ -98,10 +106,10 @@ async def process_answer_sheet(
             "exam_name": exam["name"],
             "total_questions": exam["total_questions"],
             "correct_answers": correct_count,
-            "score": f"{correct_count}/{exam['total_questions']}",
-            "percentage": f"{score_percentage:.2f}%",
-            "student_answers": student_answers,
-            "metadata": metadata
+            "score_percentage": round(score_percentage, 2),
+            "student_answers": [sa.dict() for sa in student_answers],
+            "metadata": {k: str(v) if not isinstance(v, (int, float, str, bool, type(None))) else v 
+                        for k, v in metadata.items()}
         }
         
     except HTTPException:
@@ -172,7 +180,7 @@ async def get_result_details(result_id: str, current_user: dict = Depends(get_cu
         "exam_name": result["exam_name"],
         "total_questions": result["total_questions"],
         "correct_answers": result["correct_answers"],
-        "percentage": f"{result['score_percentage']:.2f}%",
+        "score_percentage": result["score_percentage"],
         "student_answers": result["student_answers"],
-        "scanned_at": result["scanned_at"]
+        "metadata": None
     }

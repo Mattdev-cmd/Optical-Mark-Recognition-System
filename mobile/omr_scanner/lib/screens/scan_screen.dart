@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../providers/index.dart';
+import '../models/index.dart';
 
 class ScanScreen extends StatefulWidget {
   const ScanScreen({Key? key}) : super(key: key);
@@ -12,15 +13,21 @@ class ScanScreen extends StatefulWidget {
 }
 
 class _ScanScreenState extends State<ScanScreen> {
-  late TextEditingController _studentNameController;
   String? _selectedExamId;
+  String? _selectedClassroomId;
+  String? _selectedStudentId;
+  String? _selectedStudentName;
+  List<Classroom> _classrooms = [];
+  List<StudentEnrollment> _students = [];
+  bool _loadingClassrooms = false;
+  bool _loadingStudents = false;
   final ImagePicker _imagePicker = ImagePicker();
 
   @override
   void initState() {
     super.initState();
-    _studentNameController = TextEditingController();
     _loadExams();
+    _loadClassrooms();
   }
 
   void _loadExams() {
@@ -29,10 +36,50 @@ class _ScanScreenState extends State<ScanScreen> {
     });
   }
 
-  @override
-  void dispose() {
-    _studentNameController.dispose();
-    super.dispose();
+  Future<void> _loadClassrooms() async {
+    setState(() => _loadingClassrooms = true);
+    try {
+      final provider = context.read<ClassroomProvider>();
+      await provider.loadClassrooms();
+      setState(() {
+        _classrooms = provider.classrooms;
+        _loadingClassrooms = false;
+      });
+    } catch (e) {
+      setState(() => _loadingClassrooms = false);
+    }
+  }
+
+  Future<void> _onClassroomSelected(String? classroomId) async {
+    setState(() {
+      _selectedClassroomId = classroomId;
+      _selectedStudentId = null;
+      _selectedStudentName = null;
+      _students = [];
+    });
+
+    if (classroomId == null) return;
+
+    setState(() => _loadingStudents = true);
+    try {
+      final apiClient = context.read<ClassroomProvider>().apiClient;
+      final details = await apiClient.getClassroomDetails(classroomId);
+      setState(() {
+        _students = details.students;
+        _loadingStudents = false;
+      });
+    } catch (e) {
+      setState(() => _loadingStudents = false);
+    }
+  }
+
+  void _onStudentSelected(String? studentId) {
+    if (studentId == null) return;
+    final student = _students.firstWhere((s) => s.id == studentId);
+    setState(() {
+      _selectedStudentId = studentId;
+      _selectedStudentName = student.name;
+    });
   }
 
   Future<void> _pickImageFromCamera() async {
@@ -65,9 +112,9 @@ class _ScanScreenState extends State<ScanScreen> {
       return;
     }
 
-    if (_studentNameController.text.isEmpty) {
+    if (_selectedStudentName == null || _selectedStudentName!.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter student name')),
+        const SnackBar(content: Text('Please select a student')),
       );
       return;
     }
@@ -83,7 +130,7 @@ class _ScanScreenState extends State<ScanScreen> {
 
     final success = await scanProvider.processAnswerSheet(
       examId: _selectedExamId!,
-      studentName: _studentNameController.text,
+      studentName: _selectedStudentName!,
     );
 
     if (success && mounted) {
@@ -123,16 +170,51 @@ class _ScanScreenState extends State<ScanScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              TextField(
-                controller: _studentNameController,
-                decoration: InputDecoration(
-                  hintText: 'Student Name',
-                  prefixIcon: const Icon(Icons.person),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
+              // Step 1: Select Classroom
+              _loadingClassrooms
+                  ? const LinearProgressIndicator()
+                  : DropdownButtonFormField<String>(
+                      value: _selectedClassroomId,
+                      items: _classrooms
+                          .map((c) => DropdownMenuItem(
+                                value: c.id,
+                                child: Text(c.name),
+                              ))
+                          .toList(),
+                      onChanged: _onClassroomSelected,
+                      decoration: InputDecoration(
+                        labelText: 'Select Class',
+                        hintText: 'Choose a classroom',
+                        prefixIcon: const Icon(Icons.school),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
+              const SizedBox(height: 16),
+              // Step 2: Select Student from that class
+              _loadingStudents
+                  ? const LinearProgressIndicator()
+                  : DropdownButtonFormField<String>(
+                      value: _selectedStudentId,
+                      items: _students
+                          .map((s) => DropdownMenuItem(
+                                value: s.id,
+                                child: Text(s.name),
+                              ))
+                          .toList(),
+                      onChanged: _selectedClassroomId == null ? null : _onStudentSelected,
+                      decoration: InputDecoration(
+                        labelText: 'Select Student',
+                        hintText: _selectedClassroomId == null
+                            ? 'Select a class first'
+                            : 'Choose a student',
+                        prefixIcon: const Icon(Icons.person),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                      ),
+                    ),
               const SizedBox(height: 16),
               Consumer<ExamProvider>(
                 builder: (context, examProvider, _) {
@@ -140,7 +222,7 @@ class _ScanScreenState extends State<ScanScreen> {
                     return const CircularProgressIndicator();
                   }
 
-                  return DropdownButtonFormField(
+                  return DropdownButtonFormField<String>(
                     value: _selectedExamId,
                     items: examProvider.exams
                         .map((exam) => DropdownMenuItem(
